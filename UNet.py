@@ -1,11 +1,16 @@
 from torch import nn
 from Blocks import ResidualBlock, UpBlock, DownBlock
+from TimeEmbedding import timestepEmbedding, TimeMLP
 
 class UNet(nn.Module):
-    def __init__(self, inChannel, channels, attention, numRes, neckLength, timeEmbDim=None):
+    def __init__(self, inChannel, channels, attention, numRes, neckLength, timeEmbDim=64):
         super().__init__()
         assert len(channels) >= 3
         assert len(attention) == len(channels)
+
+        self.timeEmbDim = timeEmbDim
+
+        self.timeMLP = TimeMLP(timeEmbDim, inChannel)
 
         self.stem = nn.Conv2d(inChannel, channels[0], 3, padding=1)
 
@@ -29,7 +34,10 @@ class UNet(nn.Module):
             nn.Conv2d(channels[0], inChannel, 3, padding=1)
         )
         
-    def forward(self, image, timeEmb=None):
+    def forward(self, image, time):
+        timeEmb = timestepEmbedding(time, self.timeEmbDim)
+        timeEmb = self.timeMLP(timeEmb)
+
         residuals = []
         image = self.stem(image)
 
