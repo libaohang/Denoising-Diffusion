@@ -43,7 +43,7 @@ class ResidualBlock(nn.Module):
         
 
 class DownBlock(nn.Module):
-    def __init__(self, inChannels, blockChannels, numRes, timeEmbDim=None, attention=False):
+    def __init__(self, inChannels, blockChannels, numRes, timeEmbDim=None, attention=False, bottleneck=False):
         super().__init__()
         self.blockChannels = blockChannels
         self.resBlocks = nn.ModuleList(
@@ -54,7 +54,11 @@ class DownBlock(nn.Module):
             self.atten = AttentionBlock(blockChannels, 4)
         else:
             self.atten = None
-        self.down = nn.Conv2d(blockChannels, blockChannels, 3, stride=2, padding=1)
+
+        if (not bottleneck):
+            self.down = nn.Conv2d(blockChannels, blockChannels, 3, stride=2, padding=1)
+        else:
+            self.down = None
 
     def forward(self, input, timeEmb=None):
         residuals = []
@@ -64,17 +68,23 @@ class DownBlock(nn.Module):
             residuals.append(x)
 
         if(self.atten is not None):
+            print("attention")
             x = self.atten(x)
 
-        x = self.down(x)
+        if(self.down is not None):
+            x = self.down(x)
         return x, residuals
 
 
 class UpBlock(nn.Module):
-    def __init__(self, inChannels, blockChannels, numRes, timeEmbDim=None, attention=False):
+    def __init__(self, inChannels, blockChannels, numRes, timeEmbDim=None, attention=False, bottleneck=False):
         super().__init__()
         self.inChannels = inChannels
-        self.up = nn.UpsamplingBilinear2d(scale_factor=2)
+        if(not bottleneck):
+            self.up = nn.UpsamplingBilinear2d(scale_factor=2)
+        else:
+            self.up = None
+        
         if attention:
             self.atten = AttentionBlock(inChannels, 4)
         else:
@@ -87,9 +97,12 @@ class UpBlock(nn.Module):
     
     def forward(self, input, residuals, timeEmb=None):
         x = input
-        x = self.up(x)
+
+        if(self.up is not None):
+            x = self.up(x)
 
         if(self.atten is not None):
+            print("attention")
             x = self.atten(x)
 
         residuals = reversed(residuals)

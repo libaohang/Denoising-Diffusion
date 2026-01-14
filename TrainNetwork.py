@@ -1,34 +1,32 @@
 import torch
 from NoiseSchedule import cosineSchedule
 
-def trainNetwork(network, images, lossF, optimizer, T=1000, trainSteps=10000, batchSize=100, device="cuda"):
+def trainNetwork(network, dataLoader, lossF, optimizer, T=1000, trainSteps=10000, device="cuda"):
     sqrtA_, sqrt1mA_, *_= cosineSchedule(T, device=device)
     network.train()
-    images = images.to(device)
-
-    numSamples = images.size(0)
 
     for step in range(trainSteps):
-        # Random batch
-        index = torch.randint(0, numSamples, (batchSize,), device=device)
-        batch = images[index]
+        for images, _ in dataLoader:
 
-        t = torch.randint(0, T, (batchSize,), device=device)
+            images = images.to(device)
+            batchSize = images.size(0)
 
-        eps = torch.randn_like(batch)
+            t = torch.randint(0, T, (batchSize,), device=device)
 
-        a = sqrtA_[t].view(-1, 1, 1, 1)
-        b = sqrt1mA_[t].view(-1, 1, 1, 1)
+            eps = torch.randn_like(images)
 
-        noisyImages = a * batch + b * eps
+            a = sqrtA_[t].view(batchSize, 1, 1, 1)
+            b = sqrt1mA_[t].view(batchSize, 1, 1, 1)
 
-        epsHat = network(noisyImages, t)
+            noisyImages = a * images + b * eps
 
-        lossV = lossF(epsHat, eps)
+            epsHat = network(noisyImages, t)
 
-        optimizer.zero_grad(set_to_none=True)
-        lossV.backward()
-        optimizer.step()
+            lossV = lossF(epsHat, eps)
+
+            optimizer.zero_grad(set_to_none=True)
+            lossV.backward()
+            optimizer.step()
 
         if step % 100 == 0:
             print(f"step {step}: loss {lossV.item():.4f}")

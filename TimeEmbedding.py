@@ -20,9 +20,9 @@ class TimeMLP(nn.Module):
     def __init__(self, embDim, outDim):
         super().__init__()
         self.mlp = nn.Sequential(
-            nn.Linear(embDim, outDim),
+            nn.Linear(embDim, outDim * 2),
             nn.SiLU(),
-            nn.Linear(outDim, outDim)
+            nn.Linear(outDim * 2, outDim)
         )
     def forward(self, emb):
         return self.mlp(emb)
