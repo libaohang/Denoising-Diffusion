@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from UNet import UNet
+from EMA import EMA
 from TrainNetwork import trainNetwork
 
 def trainCIFAR10():
@@ -16,6 +17,8 @@ def trainCIFAR10():
 
     network = UNet(3, channels, attention, 2, 2, 64)
     network = network.to(device)
+
+    ema = EMA(network, decay=0.99995)
 
     transform = transforms.Compose([
         transforms.ToTensor(),                     # [0,1]
@@ -37,7 +40,7 @@ def trainCIFAR10():
 
     optimizer = torch.optim.AdamW(network.parameters(), lr=2e-4, weight_decay=0.0)
 
-    network = trainNetwork(network, loader, lossF, optimizer, 1000, 200, device)
+    network = trainNetwork(network, loader, lossF, optimizer, ema, 1000, 700, device)
 
 if __name__ == "__main__":
     trainCIFAR10()
