@@ -7,6 +7,9 @@ from TrainNetwork import trainNetwork
 
 def trainCIFAR10():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(device)
+
+    torch.backends.cudnn.benchmark = True
 
     channels = [64, 128, 256, 256]
     attention = [False, False, True, True]
@@ -25,16 +28,16 @@ def trainCIFAR10():
         cifar10,
         batch_size=100,
         shuffle=True,
-        num_workers=0,
-        pin_memory=False,
+        num_workers=4,
+        pin_memory=True,
         drop_last=True
     )
 
     lossF = F.mse_loss
 
-    optimizer = torch.optim.Adam(network.parameters(), lr=1e-3)
+    optimizer = torch.optim.AdamW(network.parameters(), lr=2e-4, weight_decay=0.0)
 
-    network = trainNetwork(network, loader, lossF, optimizer, 100, 1, device)
+    network = trainNetwork(network, loader, lossF, optimizer, 1000, 200, device)
 
 if __name__ == "__main__":
     trainCIFAR10()

@@ -1,11 +1,18 @@
 import torch
+import torch.nn.functional as F
+from torch.amp import autocast, GradScaler
 from NoiseSchedule import cosineSchedule
+from SaveLoad import saveModel
 
-def trainNetwork(network, dataLoader, lossF, optimizer, T=1000, trainSteps=10000, device="cuda"):
+def trainNetwork(network, dataLoader, lossF, optimizer, T=1000, epochs=100, device="cuda"):
     sqrtA_, sqrt1mA_, *_= cosineSchedule(T, device=device)
     network.train()
+    step = 0
+    lossV = 0
 
-    for step in range(trainSteps):
+    scaler = GradScaler(enabled=(device.type == "cuda"))
+
+    for epoch in range(epochs):
         for images, _ in dataLoader:
 
             images = images.to(device)
@@ -20,15 +27,21 @@ def trainNetwork(network, dataLoader, lossF, optimizer, T=1000, trainSteps=10000
 
             noisyImages = a * images + b * eps
 
-            epsHat = network(noisyImages, t)
-
-            lossV = lossF(epsHat, eps)
-
             optimizer.zero_grad(set_to_none=True)
-            lossV.backward()
-            optimizer.step()
 
-        if step % 100 == 0:
-            print(f"step {step}: loss {lossV.item():.4f}")
+            with autocast(device_type="cuda", enabled=(device.type == "cuda")):
+                epsHat = network(noisyImages, t)
+                lossV = lossF(epsHat, eps)
+
+            scaler.scale(lossV).backward()
+            scaler.step(optimizer)
+            scaler.update()
+
+            step += 1
+            if step % 100 == 0:
+                print(f"step {step}: loss {lossV.item():.4f}")
+
+        if epoch % 10 == 0:
+            saveModel(network, epoch, optimizer, scaler, lossV)
         
     return network

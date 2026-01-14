@@ -43,7 +43,7 @@ class ResidualBlock(nn.Module):
         
 
 class DownBlock(nn.Module):
-    def __init__(self, inChannels, blockChannels, numRes, timeEmbDim=None, attention=False, bottleneck=False):
+    def __init__(self, inChannels, blockChannels, numRes, timeEmbDim=None, attention=False, noDownsample=False):
         super().__init__()
         self.blockChannels = blockChannels
         self.resBlocks = nn.ModuleList(
@@ -55,7 +55,7 @@ class DownBlock(nn.Module):
         else:
             self.atten = None
 
-        if (not bottleneck):
+        if (not noDownsample):
             self.down = nn.Conv2d(blockChannels, blockChannels, 3, stride=2, padding=1)
         else:
             self.down = None
@@ -68,7 +68,6 @@ class DownBlock(nn.Module):
             residuals.append(x)
 
         if(self.atten is not None):
-            print("attention")
             x = self.atten(x)
 
         if(self.down is not None):
@@ -77,10 +76,10 @@ class DownBlock(nn.Module):
 
 
 class UpBlock(nn.Module):
-    def __init__(self, inChannels, blockChannels, numRes, timeEmbDim=None, attention=False, bottleneck=False):
+    def __init__(self, inChannels, blockChannels, numRes, timeEmbDim=None, attention=False, noUpsample=False):
         super().__init__()
         self.inChannels = inChannels
-        if(not bottleneck):
+        if(not noUpsample):
             self.up = nn.UpsamplingBilinear2d(scale_factor=2)
         else:
             self.up = None
@@ -102,7 +101,6 @@ class UpBlock(nn.Module):
             x = self.up(x)
 
         if(self.atten is not None):
-            print("attention")
             x = self.atten(x)
 
         residuals = reversed(residuals)
