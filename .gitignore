@@ -1,5 +1,7 @@
 __pycache__/
 data/
 *.pyc
-checkpoints/
-samples/
+CelebA-checkpoints/
+CIFAR10-checkpoints/
+CelebA-samples/
+CIFAR10-samples/

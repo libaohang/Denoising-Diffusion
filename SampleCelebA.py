@@ -9,17 +9,17 @@ from EMA import EMA
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-channels = [64, 128, 256, 256]
-attention = [False, False, True, True]
+channels = [64, 128, 256, 512, 512]
+attention = [False, False, True, True, False]
 
-network = UNet(3, channels, attention, 2, 2, 64)
+network = UNet(3, channels, attention, 3, 2, 64)
 network.to(device)
 
 ema = EMA(network, decay=0.99995)
 
-step = 55500
+step = 17897
 
-loadModel(step, network, ema, "CIFAR10", device=device)
+loadModel(step, network, ema, "CelebA", device=device)
 
 T = 1000
 
@@ -31,7 +31,7 @@ def ddim(applyEMA=False):
         network=network,
         T=T,
         alphaBars=alphaBars,
-        shape=(64, 3, 32, 32),
+        shape=(64, 3, 64, 64),
         device=device,
         steps=100,
         eta=0.0
@@ -57,7 +57,7 @@ def ddpm(applyEMA=False):
         c1=c1, 
         c2=c2,
         device=device,
-        shape=(64, 3, 32, 32)
+        shape=(64, 3, 64, 64)
     )
     if(applyEMA):
         ema.restore(network)

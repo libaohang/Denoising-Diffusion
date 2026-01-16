@@ -6,29 +6,31 @@ from UNet import UNet
 from EMA import EMA
 from TrainNetwork import trainNetwork
 
-def trainCIFAR10():
+def trainCelebA():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(device)
 
     torch.backends.cudnn.benchmark = True
 
-    channels = [64, 128, 256, 256]
-    attention = [False, False, True, True]
+    channels = [64, 128, 256, 512, 512]
+    attention = [False, False, True, True, False]
 
-    network = UNet(3, channels, attention, 2, 2, 64)
+    network = UNet(3, channels, attention, 3, 2, 64)
     network = network.to(device)
 
     ema = EMA(network, decay=0.99995)
 
     transform = transforms.Compose([
-        transforms.ToTensor(),                     # [0,1]
-        transforms.Lambda(lambda x: x * 2.0 - 1.0) # [-1,1]
+        transforms.CenterCrop(178),        
+        transforms.Resize(64),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
-    cifar10 = datasets.CIFAR10(root="./data", train=True, download=True, transform=transform)
+    celebA = datasets.CelebA(root="./data", split="train", download=True, transform=transform)
 
     loader = DataLoader(
-        cifar10,
+        celebA,
         batch_size=100,
         shuffle=True,
         num_workers=4,
@@ -40,8 +42,8 @@ def trainCIFAR10():
 
     optimizer = torch.optim.AdamW(network.parameters(), lr=2e-4, weight_decay=0.0)
 
-    network = trainNetwork(network, loader, lossF, optimizer, ema, "CIFAR10", 1000, 700, device)
+    network = trainNetwork(network, loader, lossF, optimizer, ema, "CelebA", 1000, 1000, device)
 
 if __name__ == "__main__":
-    trainCIFAR10()
+    trainCelebA()
 

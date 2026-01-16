@@ -4,7 +4,7 @@ from torch.amp import autocast, GradScaler
 from NoiseSchedule import cosineSchedule
 from SaveLoad import saveModel
 
-def trainNetwork(network, dataLoader, lossF, optimizer, ema, T=1000, epochs=100, device="cuda"):
+def trainNetwork(network, dataLoader, lossF, optimizer, ema, dataset, T=1000, epochs=100, device="cuda"):
     sqrtA_, sqrt1mA_, *_= cosineSchedule(T, device=device)
     network.train()
     step = 0
@@ -45,6 +45,6 @@ def trainNetwork(network, dataLoader, lossF, optimizer, ema, T=1000, epochs=100,
                 print(f"step {step}: loss {lossV.item():.4f}")
 
         if epoch % 10 == 0:
-            saveModel(network, ema, step, optimizer, scaler, lossV)
+            saveModel(network, ema, step, optimizer, scaler, lossV, dataset)
         
     return network

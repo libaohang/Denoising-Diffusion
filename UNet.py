@@ -42,21 +42,21 @@ class UNet(nn.Module):
         image = self.stem(image)
 
         for block in self.downBlocks:
-            # print(image.shape, "down block")
+            print(image.shape, "down block")
             image, residual = block(image, timeEmb)
             # residual is a list of all residuals in a block
             residuals.append(residual)
         
         for block in self.bottleneck:
-            # print(image.shape, "bottleneck")
+            print(image.shape, "bottleneck")
             image = block(image, timeEmb)
 
         residuals = reversed(residuals)
 
         for block, residual in zip(self.upBlocks, residuals, strict=True):
-            # print(image.shape, "up block")
+            print(image.shape, "up block")
             image = block(image, residual, timeEmb)
 
         image = self.head(image)
-        # print(image.shape, "end")
+        print(image.shape, "end")
         return image

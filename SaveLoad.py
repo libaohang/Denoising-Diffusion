@@ -1,8 +1,8 @@
 import os
 import torch
 
-def saveModel(network, ema, step, optimizer, scaler, lossV, all=False):
-    save_dir = "./checkpoints"
+def saveModel(network, ema, step, optimizer, scaler, lossV, dataset, all=False):
+    save_dir = f"./{dataset}checkpoints"
     os.makedirs(save_dir, exist_ok=True)
     if(all):
         torch.save(
@@ -27,8 +27,8 @@ def saveModel(network, ema, step, optimizer, scaler, lossV, all=False):
             f"{save_dir}/ckpt_step_{step}.pt"
         )
 
-def loadModel(step, network, ema, optimizer=None, scaler=None, device="cuda"):
-    ckpt = torch.load(f"checkpoints/ckpt_step_{step}.pt", map_location=device)
+def loadModel(step, network, ema, dataset, optimizer=None, scaler=None, device="cuda"):
+    ckpt = torch.load(f"{dataset}checkpoints/ckpt_step_{step}.pt", map_location=device)
 
     network.load_state_dict(ckpt["model_state"])
     ema.shadow = ckpt["ema"]
