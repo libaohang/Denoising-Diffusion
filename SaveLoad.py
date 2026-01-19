@@ -40,3 +40,8 @@ def loadModel(step, network, ema, dataset, optimizer=None, scaler=None, device="
     start_step = ckpt["step"] + 1
 
     return start_step, optimizer, network
+
+def loadEMA(step, ema, dataset, device="cuda"):
+    ckpt = torch.load(f"{dataset}checkpoints/ckpt_step_{step}_ema_fp16.pt", map_location=device)
+    ema.shadow = ckpt["ema"]
+    return ema

@@ -42,7 +42,7 @@ def trainCelebA():
 
     optimizer = torch.optim.AdamW(network.parameters(), lr=2e-4, weight_decay=0.0)
 
-    network = trainNetwork(network, loader, lossF, optimizer, ema, "CelebA", 1000, 1000, device)
+    network = trainNetwork(network, loader, lossF, optimizer, ema, "CelebA", 1000, 180, device)
 
 if __name__ == "__main__":
     trainCelebA()
