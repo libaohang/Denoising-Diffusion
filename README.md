@@ -1,13 +1,13 @@
-# Diffusion Model from Scratch Using PyTorch
+# Diffusion Models from Scratch in PyTorch
 
 ## Description
 **A diffusion probabilistic model capable of image generation**
 <br>
-I built a scalable diffusion model using the PyTorch library and trained and generated images from CelebA and CIFAR-10 datasets.
+I implemented a scalable diffusion probabilistic model in PyTorch and trained it on the CIFAR-10 and CelebA datasets.
 <br>
 
 ## Model Structure
-**UNet (inChannel, channels, attention, numRes, neckLength, timeEmbDim=64)** <br>
+**UNet Backbone** <br>
 <pre>
  Conv2d                        Output head          Width of blocks:     Has attention: <br>
     ↓                               ↑ <br>
@@ -18,10 +18,11 @@ DownBlock---skip connections---> UpBlock            channels[-2]         attenti
     ↓                               ↑ <br>
 DownBlock → ResidualBlock → …  → UpBlock            channels[-1]         attention[-1] <br>
 </pre>
+**UNet (inChannel, channels, attention, numRes, neckLength, timeEmbDim=64)** <br>
 Conv2d at the beginning maps *inChannel* to *channels[0]*; *channels* is a list of integers, each corresponding to the width of DownBlock and UpBlock at each level. 
 *attention* is a list of boolean values, each denoting whether there is self-attention at each level.
 The number of ResidualBlock connecting the bottommost DownBlock and UpBlock is determined by *neckLength*. 
-Sinusoidal time embedding is injected into every DownBlock, UpBlock, and ResidualBlock. <br>
+Sinusoidal time embedding is injected into every ResidualBlock throughout the U-Net. <br>
 
 **ResidualBlock (inChannels, outChannels, timeEmbDim)** <br>
 Two 3×3 convolutions with GroupNorm and SiLU activations, with a residual skip connection and additive time-embedding projection. <br>
@@ -34,11 +35,11 @@ optionally including a self-attention layer. <br>
 Bilinear upsampling (no upsample for the bottommost UpBlock) followed by concatenation with skip connections and *numRes* residual blocks, optionally with self-attention. <br>
 
 ## Training
-I use a cosine noise schedule and sample a random diffusion timestep for each training image. This exposes the model to varying noise levels within each batch and allows it to learn denoising across the full diffusion process simultaneously. The model is trained to predict the injected noise at each timestep, using mean squared error (MSE) loss. Gradients from this loss are backpropagated to update the network parameters. I used a batch size of 100, so the model processes 100 images every gradient step. The model is trained unconditionally, so class labels are ignored. <br>
+I use a cosine noise schedule and sample a random diffusion timestep for each training image. This exposes the model to varying noise levels within each batch and allows it to learn denoising across the full diffusion process simultaneously. The model is trained to predict the injected noise at each timestep, using mean squared error (MSE) loss. Gradients from this loss are backpropagated to update the network parameters. Training is performed with batch size of 100, so 100 images are processed every gradient step. The model is trained unconditionally, so class labels are ignored. <br>
 
 ### Datasets
 I first trained the model on the CIFAR-10 dataset to debug the network and add features, as it is smaller in dimensions. After I ensured the model trains properly and the sampling process is correct, I moved on to train on the CelebA dataset, which has smoother structures and higher perceptual quality. <br>
-CIFAR-10 contains images of cats, cars, planes, dogs, horses, deer, ships, trucks, birds, and frogs. CelebA contains faces of celebrities. <br>
+CIFAR-10 contains 10 object classes, including animals and vehicles. CelebA contains faces of celebrities. <br>
 Below are some samples of training images for reference. <br>
 <br>
 **CIFAR-10:** <br>
@@ -63,8 +64,8 @@ Steps <br>
 **CelebA:** <br>
 1k:      <img width="684" height="72" alt="samples_1k_ddpm_seed30" src="https://github.com/user-attachments/assets/06990df8-0bfe-47c5-8b88-aeb7a265a075" /> <br>
 20k: <img width="684" height="72" alt="samples_20k_ddpm_seed30" src="https://github.com/user-attachments/assets/a5ade5b1-ee77-4821-a621-1cde8175a3fc" /> <br>
-40K: <img width="684" height="72" alt="samples_40k_ddpm_seed30" src="https://github.com/user-attachments/assets/b57d0553-ee56-4649-8d2c-20f343f5b377" /> <br>
-60k: <br>
+40k: <img width="684" height="72" alt="samples_40k_ddpm_seed30" src="https://github.com/user-attachments/assets/b57d0553-ee56-4649-8d2c-20f343f5b377" /> <br>
+60k: <img width="684" height="72" alt="samples_60k_ddpm_seed30" src="https://github.com/user-attachments/assets/3786f908-137f-4be6-a220-a1c5aca5cb19" /> <br>
 80k: <br>
 100k: <br>
 120k: <br>
@@ -74,7 +75,7 @@ Steps <br>
 200k: <br>
 220k: <br>
 <br>
-It's apparent how the model is denoising the same noise into similar but progressively cleaner images as it is trained for more steps. This process is more easily observed in CelebA samples since faces have a consistent structure compared to the varying perspectives and objects of CIFAR-10 images. <br>
+It's apparent how the model is denoising the same initial noise into progressively cleaner images as it is trained for more steps. This process is more easily observed in CelebA samples since faces have a consistent structure compared to the varying perspectives and objects of CIFAR-10 images. <br>
 
 ## Sampling
 
@@ -83,29 +84,23 @@ DDPM sampling follows the full learned reverse diffusion process, iteratively de
 DDIM accelerates sampling by using a deterministic update rule that allows the diffusion trajectory to be traversed in far fewer steps. By skipping most intermediate timesteps, DDIM significantly reduces sampling time. However, this deterministic path can oversmooth high-frequency details, sometimes resulting in less realistic samples. <br>
 Below is a comparison of samples generated from the same model checkpoint after 196k training steps using DDIM with 20 steps, DDIM with 100 steps, and DDPM. <br>
 <br>
-**DDIM with 20 steps:** <br>
-<img width="684" height="140" alt="samples_196k_ddim20_seed30" src="https://github.com/user-attachments/assets/3cf07787-6f15-48d8-b446-5d474ead36da" /> <br>
-**DDIM with 100 steps:** <br>
+**DDIM (20 steps):**    <img width="684" height="140" alt="samples_196k_ddim20_seed30" src="https://github.com/user-attachments/assets/3cf07787-6f15-48d8-b446-5d474ead36da" /> <br>
+**DDIM (100 steps):** 
 <img width="684" height="140" alt="samples_196k_ddim100_seed30" src="https://github.com/user-attachments/assets/b423f0dd-9045-40ce-99f8-ece1aee0bf0b" /> <br>
-**DDPM:** <br>
-<img width="684" height="140" alt="samples_196k_ddpm_seed30" src="https://github.com/user-attachments/assets/3fc358ee-f294-403a-89a3-bafa499c7dd4" /> <br>
+**DDPM:** ᅠᅠᅠᅠ      <img width="684" height="140" alt="samples_196k_ddpm_seed30" src="https://github.com/user-attachments/assets/3fc358ee-f294-403a-89a3-bafa499c7dd4" /> <br>
 
 After 50 to 100 steps, DDIM samples achieve a similar quality as DDPM samples, especially for sampling from models in later stages of training. Note how even when all of the above samples are taken using the same seed, DDPM and DDIM samples do not match because they map the same noise to different faces. 
 
 ### EMA
-Exponential Moving Average (EMA) weights summarize model parameters from previous steps to maintain a smoothed version of the model. EMA weights have steadier optimization since raw weights are stochastically updated by randomized batches. As a result, EMA yields more stable and higher-quality diffusion samples compared to raw weights at later training stages. <br>
+Exponential Moving Average (EMA) weights summarize model parameters from previous steps to maintain a smoothed version of the model. EMA weights have steadier optimization since raw weights are stochastically updated by randomized batches. As a result, EMA weights can lag behind raw weights in early training, but yield more stable and higher-quality diffusion samples at later training stages.
 
 Below is a comparison between CelebA DDPM samples generated using raw vs EMA weights of the model after 196k steps. <br>
-**Raw weights:** <br>
-<img width="684" height="72" alt="samples_196k_ddpm_seed40" src="https://github.com/user-attachments/assets/a35f364b-f4e5-409d-9f8a-c81d5e7320fd" /> <br>
-**EMA weights:** <br>
-<img width="684" height="72" alt="samples_196k_ddpm_ema_seed40" src="https://github.com/user-attachments/assets/88b12f2a-17c9-44ae-ae4c-21faf9eea44b" /> <br>
+**Raw weights:**   <img width="684" height="72" alt="samples_196k_ddpm_seed40" src="https://github.com/user-attachments/assets/a35f364b-f4e5-409d-9f8a-c81d5e7320fd" /> <br>
+**EMA weights:** <img width="684" height="72" alt="samples_196k_ddpm_ema_seed40" src="https://github.com/user-attachments/assets/88b12f2a-17c9-44ae-ae4c-21faf9eea44b" /> <br>
 
 Below is a comparison between CIFAR-10 DDPM samples generated using raw vs EMA weights of the model after 100k steps. <br>
-**Raw weights:** <br>
-<img width="500" height="47" alt="samples_100k_ddpm_seed40" src="https://github.com/user-attachments/assets/b1c99a86-b93b-4e45-8388-092521fd843d" /> <br>
-**EMA weights:** <br>
-<img width="500" height="47" alt="samples_100k_ddpm_ema_seed40" src="https://github.com/user-attachments/assets/e1abb103-ae78-42cd-b63d-ad6e04ae0fc8" /> <br>
+**Raw weights:**   <img width="500" height="47" alt="samples_100k_ddpm_seed40" src="https://github.com/user-attachments/assets/b1c99a86-b93b-4e45-8388-092521fd843d" /> <br>
+**EMA weights:** <img width="500" height="47" alt="samples_100k_ddpm_ema_seed40" src="https://github.com/user-attachments/assets/e1abb103-ae78-42cd-b63d-ad6e04ae0fc8" /> <br>
 
 ## Results
 **CelebA** <br>
@@ -116,17 +111,17 @@ Below is a comparison between CIFAR-10 DDPM samples generated using raw vs EMA w
 100 DDPM samples with EMA after 350k steps: <br> 
 <img width="500" height="500" alt="CIFAR10_samples_350k_ddpm_ema" src="https://github.com/user-attachments/assets/3207e00d-8f75-4e87-a2f5-6559e58652c4" /> <br>
 
-From these final samples, it is clear that both models are successful at generating recognizable images, especially with the CelebA samples being nearly photorealistic. Some of the CelebA samples can even be identified as specific celebrities. <br>
+From these final samples, it is clear that both models are successful at generating recognizable images, especially with the CelebA samples being nearly photorealistic. Some CelebA samples actually resemble celebrities present in the dataset. <br>
 The CIFAR-10 samples are less distinguishable because of the low dimensionality of the photos and the model mixing similar objects, such as birds and planes, cats and dogs. However, considering that the model for CIFAR-10 is trained unconditionally without class labels, these samples still achieve a reasonable level of resemblance to training images. <br>
 
 ## Performance
 For training, I used CUDA on an RTX A4000 GPU. <br>
 The CIFAR-10 model takes 11 seconds to run 100 steps; the final 350k-step model took around 10 hours to train. <br>
 The CelebA model takes 55 seconds to run 100 steps; the final 229k-step model took around 35 hours to train. <br> 
-The CelebA model has around 100 million parameters, so the EMA weights stored in FP16 take up 200 MB. <br>
+The CelebA model contains approximately 100 million parameters; storing EMA weights in FP16 results in a ~200 MB checkpoint. <br>
 
 I recorded the time needed to generate 64 CIFAR-10 samples and the time needed to generate 16 CelebA samples using 
-combinations of DDPM vs DDIM sampling and running on 4-core CPU vs CUDA on A4000 in the table below. <br>
+combinations of 100-step DDPM vs DDIM sampling and running on 4-core CPU vs CUDA on A4000 in the table below. <br>
 
 |ᅟᅟ| CIFAR-10 | CelebA|
 |:---|:----|:----|
@@ -139,9 +134,10 @@ To change the sampling method for CIFAR-10, specify the first argument of *sampl
 Similarly, the sampling method for CelebA is determined by the first argument of *sampleCelebA*. <br>
 The second argument of *sampleCIFAR10* and *sampleCelebA* determines the number of images in one row of the square grid of images generated. <br>
 Refer to the table under the performance section for sampling time. <br>
+It is recommended to use a CUDA-enabled GPU for reasonable runtimes when sampling CelebA using DDPM. <br>
 
 
 ## References
-* https://nathanbaileyw.medium.com/a-look-at-diffusion-models-79bd7e789964
-* https://arxiv.org/pdf/2006.11239
-* https://arxiv.org/abs/2010.02502
+* https://nathanbaileyw.medium.com/a-look-at-diffusion-models-79bd7e789964; U-Net, UpBlock, and DownBlock structure
+* https://arxiv.org/pdf/2006.11239; DDPM sampling and training
+* https://arxiv.org/abs/2010.02502; DDIM sampling
