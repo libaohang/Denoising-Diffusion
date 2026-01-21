@@ -62,15 +62,15 @@ Steps <br>
 350k: <img width="500" height="47" alt="samples_350k_ddpm" src="https://github.com/user-attachments/assets/cfc531c1-c86d-4eec-bd6b-d8c9b3128856" /> <br>
 <br>
 **CelebA:** <br>
-1k:      <img width="684" height="72" alt="samples_1k_ddpm_seed30" src="https://github.com/user-attachments/assets/06990df8-0bfe-47c5-8b88-aeb7a265a075" /> <br>
-20k: <img width="684" height="72" alt="samples_20k_ddpm_seed30" src="https://github.com/user-attachments/assets/a5ade5b1-ee77-4821-a621-1cde8175a3fc" /> <br>
-40k: <img width="684" height="72" alt="samples_40k_ddpm_seed30" src="https://github.com/user-attachments/assets/b57d0553-ee56-4649-8d2c-20f343f5b377" /> <br>
-60k: <img width="684" height="72" alt="samples_60k_ddpm_seed30" src="https://github.com/user-attachments/assets/3786f908-137f-4be6-a220-a1c5aca5cb19" /> <br>
-80k: <br>
-100k: <br>
-120k: <br>
-140k: <br>
-160k: <br>
+1k:          <img width="684" height="72" alt="samples_1k_ddpm_seed30" src="https://github.com/user-attachments/assets/06990df8-0bfe-47c5-8b88-aeb7a265a075" /> <br>
+20k:     <img width="684" height="72" alt="samples_20k_ddpm_seed30" src="https://github.com/user-attachments/assets/a5ade5b1-ee77-4821-a621-1cde8175a3fc" /> <br>
+40k:     <img width="684" height="72" alt="samples_40k_ddpm_seed30" src="https://github.com/user-attachments/assets/b57d0553-ee56-4649-8d2c-20f343f5b377" /> <br>
+60k:     <img width="684" height="72" alt="samples_60k_ddpm_seed30" src="https://github.com/user-attachments/assets/3786f908-137f-4be6-a220-a1c5aca5cb19" /> <br>
+80k:     <img width="684" height="72" alt="samples_80k_ddpm_seed30" src="https://github.com/user-attachments/assets/a4f3b7f7-120f-4ae0-97f9-483aaf5d5e32" /> <br>
+100k: <img width="684" height="72" alt="samples_100k_ddpm_seed30" src="https://github.com/user-attachments/assets/7d6cb2ef-76c4-477d-b9b5-b6edfe6995cc" /> <br>
+120k: <img width="684" height="72" alt="samples_120k_ddpm_seed30" src="https://github.com/user-attachments/assets/70886915-f0e1-48e2-b88c-44e67e7be423" /> <br>
+140k: <img width="684" height="72" alt="samples_140k_ddpm_seed30" src="https://github.com/user-attachments/assets/6ec926c5-d192-4821-b706-2e47a44c81bb" /> <br>
+160k: <img width="684" height="72" alt="samples_160k_ddpm_seed30" src="https://github.com/user-attachments/assets/0c30ae90-2976-4eef-8747-83b75e1bfb2a" /> <br>
 180k: <br>
 200k: <br>
 220k: <br>
@@ -129,6 +129,7 @@ combinations of 100-step DDPM vs DDIM sampling and running on 4-core CPU vs CUDA
 |CUDA|DDIM: 6s <br> DDPM: 38s|DDIM: 8s <br> DDPM: 50s|
 
 ## How to Sample
+Download the final EMA weights for CelebA from this link: https://drive.google.com/file/d/17Extm3Zon0xu72yz5jbeTMJ5VoAyeRoC/view?usp=sharing and place it into the CelebAcheckpoints folder. <br>
 Run the file SampleEMA.py to sample 64 CIFAR-10 using DDPM and 16 CelebA images using DDIM, both using EMA weights on their respective final models. <br>
 To change the sampling method for CIFAR-10, specify the first argument of *sampleCIFAR10* to be "ddim" or "ddpm" for DDPM or DDIM sampling, respectively. <br>
 Similarly, the sampling method for CelebA is determined by the first argument of *sampleCelebA*. <br>
@@ -136,6 +137,14 @@ The second argument of *sampleCIFAR10* and *sampleCelebA* determines the number 
 Refer to the table under the performance section for sampling time. <br>
 It is recommended to use a CUDA-enabled GPU for reasonable runtimes when sampling CelebA using DDPM. <br>
 
+## Limitations and Improvements
+The CelebA model was trained on images cropped to 64×64 to keep training time and computational cost reasonable. While 64×64 samples are significantly more visually appealing than the 32×32 CIFAR-10 samples, this resolution still limits fine detail and overall sharpness. Training at higher resolutions, such as 128×128, would allow the model to capture more detailed facial structure and texture, resulting in clearer and more realistic samples. 
+<br>
+Despite strong overall performance, the final CelebA model occasionally produces errors in generation, such as the example depicted below: <br>
+<img width="250" height="251" alt="image" src="https://github.com/user-attachments/assets/1b172278-a445-48c9-ab97-465722c1df97" /> <br>
+These errors typically appear near the top of the image in the form of vertical smearing. This behavior is caused by a combination of dataset alignment bias, ambiguity in hair regions, and flaws amplified through multiple upsampling stages in the U-Net. Such errors are a known limitation of diffusion models trained on 64×64 CelebA, and they largely disappear when training at 128×128 resolution. <br>
+<br>
+In addition to resolution limitations, the CIFAR-10 samples occasionally exhibit mixing between visually similar object classes, such as birds and planes or cats and dogs. This occurs because the model is trained unconditionally, without access to class labels. A natural solution would be to incorporate class conditioning, which would allow the model to distinguish between object categories and generate more class-consistent samples. <br>
 
 ## References
 * https://nathanbaileyw.medium.com/a-look-at-diffusion-models-79bd7e789964; U-Net, UpBlock, and DownBlock structure
