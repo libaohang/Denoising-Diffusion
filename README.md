@@ -93,7 +93,7 @@ Below is a comparison of samples generated from the same model checkpoint after 
 After 50 to 100 steps, DDIM samples achieve a similar quality as DDPM samples, especially for sampling from models in later stages of training. Note how even when all of the above samples are taken using the same seed, DDPM and DDIM samples do not match because they map the same noise to different faces. 
 
 ### EMA
-Exponential Moving Average (EMA) weights summarize model parameters from previous steps to maintain a smoothed version of the model. EMA weights have steadier optimization since raw weights are stochastically updated by randomized batches. As a result, EMA yields more stable and higher-quality diffusion samples compared to raw weights. <br>
+Exponential Moving Average (EMA) weights summarize model parameters from previous steps to maintain a smoothed version of the model. EMA weights have steadier optimization since raw weights are stochastically updated by randomized batches. As a result, EMA yields more stable and higher-quality diffusion samples compared to raw weights at later training stages. <br>
 
 Below is a comparison between CelebA DDPM samples generated using raw vs EMA weights of the model after 196k steps. <br>
 **Raw weights:** <br>
@@ -119,8 +119,29 @@ Below is a comparison between CIFAR-10 DDPM samples generated using raw vs EMA w
 From these final samples, it is clear that both models are successful at generating recognizable images, especially with the CelebA samples being nearly photorealistic. Some of the CelebA samples can even be identified as specific celebrities. <br>
 The CIFAR-10 samples are less distinguishable because of the low dimensionality of the photos and the model mixing similar objects, such as birds and planes, cats and dogs. However, considering that the model for CIFAR-10 is trained unconditionally without class labels, these samples still achieve a reasonable level of resemblance to training images. <br>
 
+## Performance
+For training, I used CUDA on an RTX A4000 GPU. <br>
+The CIFAR-10 model takes 11 seconds to run 100 steps; the final 350k-step model took around 10 hours to train. <br>
+The CelebA model takes 55 seconds to run 100 steps; the final 229k-step model took around 35 hours to train. <br> 
+The CelebA model has around 100 million parameters, so the EMA weights stored in FP16 take up 200 MB. <br>
+
+I recorded the time needed to generate 64 CIFAR-10 samples and the time needed to generate 16 CelebA samples using 
+combinations of DDPM vs DDIM sampling and running on 4-core CPU vs CUDA on A4000 in the table below. <br>
+
+|ᅟᅟ| CIFAR-10 | CelebA|
+|:---|:----|:----|
+|CPU|DDIM: 2m 18s <br> DDPM: 21m 45s|DDIM: 4m 4s <br> DDPM: 40m 6s|
+|CUDA|DDIM: 6s <br> DDPM: 38s|DDIM: 8s <br> DDPM: 50s|
+
+## How to Sample
+Run the file SampleEMA.py to sample 64 CIFAR-10 using DDPM and 16 CelebA images using DDIM, both using EMA weights on their respective final models. <br>
+To change the sampling method for CIFAR-10, specify the first argument of *sampleCIFAR10* to be "ddim" or "ddpm" for DDPM or DDIM sampling, respectively. <br>
+Similarly, the sampling method for CelebA is determined by the first argument of *sampleCelebA*. <br>
+The second argument of *sampleCIFAR10* and *sampleCelebA* determines the number of images in one row of the square grid of images generated. <br>
+Refer to the table under the performance section for sampling time. <br>
+
 
 ## References
-https://nathanbaileyw.medium.com/a-look-at-diffusion-models-79bd7e789964
-https://arxiv.org/pdf/2006.11239
-https://arxiv.org/abs/2010.02502
+* https://nathanbaileyw.medium.com/a-look-at-diffusion-models-79bd7e789964
+* https://arxiv.org/pdf/2006.11239
+* https://arxiv.org/abs/2010.02502
