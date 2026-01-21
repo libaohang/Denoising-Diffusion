@@ -86,7 +86,7 @@ Below is a comparison of samples generated from the same model checkpoint after 
 **DDIM (20 steps):**    <img width="684" height="140" alt="samples_196k_ddim20_seed30" src="https://github.com/user-attachments/assets/3cf07787-6f15-48d8-b446-5d474ead36da" /> <br>
 **DDIM (100 steps):** 
 <img width="684" height="140" alt="samples_196k_ddim100_seed30" src="https://github.com/user-attachments/assets/b423f0dd-9045-40ce-99f8-ece1aee0bf0b" /> <br>
-**DDPM:** ᅠᅠᅠᅠ      <img width="684" height="140" alt="samples_196k_ddpm_seed30" src="https://github.com/user-attachments/assets/3fc358ee-f294-403a-89a3-bafa499c7dd4" /> <br>
+**DDPM:** ᅠᅠᅠᅠ       <img width="684" height="140" alt="samples_196k_ddpm_seed30" src="https://github.com/user-attachments/assets/3fc358ee-f294-403a-89a3-bafa499c7dd4" /> <br>
 
 After 50 to 100 steps, DDIM samples achieve a similar quality as DDPM samples, especially for sampling from models in later stages of training. Note how even when all of the above samples are taken using the same seed, DDPM and DDIM samples do not match because they map the same noise to different faces. 
 
