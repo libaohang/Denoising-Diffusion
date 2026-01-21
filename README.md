@@ -71,11 +71,10 @@ Steps <br>
 120k: <img width="684" height="72" alt="samples_120k_ddpm_seed30" src="https://github.com/user-attachments/assets/70886915-f0e1-48e2-b88c-44e67e7be423" /> <br>
 140k: <img width="684" height="72" alt="samples_140k_ddpm_seed30" src="https://github.com/user-attachments/assets/6ec926c5-d192-4821-b706-2e47a44c81bb" /> <br>
 160k: <img width="684" height="72" alt="samples_160k_ddpm_seed30" src="https://github.com/user-attachments/assets/0c30ae90-2976-4eef-8747-83b75e1bfb2a" /> <br>
-180k: <br>
-200k: <br>
-220k: <br>
+180k: <img width="684" height="72" alt="samples_180k_ddpm_seed30" src="https://github.com/user-attachments/assets/f7eefdb5-3fbf-4b8b-8dff-313537683ba4" /> <br>
+
 <br>
-It's apparent how the model is denoising the same initial noise into progressively cleaner images as it is trained for more steps. This process is more easily observed in CelebA samples since faces have a consistent structure compared to the varying perspectives and objects of CIFAR-10 images. <br>
+It's apparent how the model is denoising the same initial noise into progressively cleaner images as it is trained for more steps. This process is more easily observed in CelebA samples since faces have a consistent structure compared to the varying perspectives and objects of CIFAR-10 images. Samples are shown every 20k steps up to 180k, after which visual improvements become subtle. <br>
 
 ## Sampling
 
@@ -130,7 +129,7 @@ combinations of 100-step DDPM vs DDIM sampling and running on 4-core CPU vs CUDA
 
 ## How to Sample
 Download the final EMA weights for CelebA from this link: https://drive.google.com/file/d/17Extm3Zon0xu72yz5jbeTMJ5VoAyeRoC/view?usp=sharing and place it into the CelebAcheckpoints folder. <br>
-Run the file SampleEMA.py to sample 64 CIFAR-10 using DDPM and 16 CelebA images using DDIM, both using EMA weights on their respective final models. <br>
+Run the file SampleEMA.py to sample 64 CIFAR-10 and 16 CelebA images using DDIM, both using EMA weights of their respective final models (takes ~7 minutes using CPU). <br>
 To change the sampling method for CIFAR-10, specify the first argument of *sampleCIFAR10* to be "ddim" or "ddpm" for DDPM or DDIM sampling, respectively. <br>
 Similarly, the sampling method for CelebA is determined by the first argument of *sampleCelebA*. <br>
 The second argument of *sampleCIFAR10* and *sampleCelebA* determines the number of images in one row of the square grid of images generated. <br>
@@ -141,7 +140,7 @@ It is recommended to use a CUDA-enabled GPU for reasonable runtimes when samplin
 The CelebA model was trained on images cropped to 64×64 to keep training time and computational cost reasonable. While 64×64 samples are significantly more visually appealing than the 32×32 CIFAR-10 samples, this resolution still limits fine detail and overall sharpness. Training at higher resolutions, such as 128×128, would allow the model to capture more detailed facial structure and texture, resulting in clearer and more realistic samples. 
 <br>
 Despite strong overall performance, the final CelebA model occasionally produces errors in generation, such as the example depicted below: <br>
-<img width="250" height="251" alt="image" src="https://github.com/user-attachments/assets/1b172278-a445-48c9-ab97-465722c1df97" /> <br>
+<img width="200" height="201" alt="image" src="https://github.com/user-attachments/assets/1b172278-a445-48c9-ab97-465722c1df97" /> <br>
 These errors typically appear near the top of the image in the form of vertical smearing. This behavior is caused by a combination of dataset alignment bias, ambiguity in hair regions, and flaws amplified through multiple upsampling stages in the U-Net. Such errors are a known limitation of diffusion models trained on 64×64 CelebA, and they largely disappear when training at 128×128 resolution. <br>
 <br>
 In addition to resolution limitations, the CIFAR-10 samples occasionally exhibit mixing between visually similar object classes, such as birds and planes or cats and dogs. This occurs because the model is trained unconditionally, without access to class labels. A natural solution would be to incorporate class conditioning, which would allow the model to distinguish between object categories and generate more class-consistent samples. <br>
