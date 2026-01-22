@@ -74,7 +74,7 @@ Steps <br>
 180k: <img width="684" height="72" alt="samples_180k_ddpm_seed30" src="https://github.com/user-attachments/assets/f7eefdb5-3fbf-4b8b-8dff-313537683ba4" /> <br>
 
 <br>
-It's apparent how the model is denoising the same initial noise into progressively cleaner images as it is trained for more steps. This process is more easily observed in CelebA samples since faces have a consistent structure compared to the varying perspectives and objects of CIFAR-10 images. Samples are shown every 20k steps up to 180k, after which visual improvements become subtle. <br>
+It's apparent how the model is denoising the same initial noise into progressively cleaner images as it is trained for more steps. This process is more easily observed in CelebA samples since faces have a consistent structure compared to the varying perspectives and objects of CIFAR-10 images. CelebA samples are shown every 20k steps up to 180k, after which visual improvements become subtle. <br>
 
 ## Sampling
 
@@ -122,7 +122,7 @@ The CelebA model contains approximately 100 million parameters; storing EMA weig
 I recorded the time needed to generate 64 CIFAR-10 samples and the time needed to generate 16 CelebA samples using 
 combinations of 100-step DDPM vs DDIM sampling and running on 4-core CPU vs CUDA on A4000 in the table below. <br>
 
-|ᅟᅟ| CIFAR-10 | CelebA|
+|| CIFAR-10 | CelebA|
 |:---|:----|:----|
 |CPU|DDIM: 2m 18s <br> DDPM: 21m 45s|DDIM: 4m 4s <br> DDPM: 40m 6s|
 |CUDA|DDIM: 6s <br> DDPM: 38s|DDIM: 8s <br> DDPM: 50s|
