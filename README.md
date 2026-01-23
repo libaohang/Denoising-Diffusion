@@ -114,7 +114,7 @@ From these final samples, it is clear that both models are successful at generat
 The CIFAR-10 samples are less distinguishable because of the low dimensionality of the photos and the model mixing similar objects, such as birds and planes, cats and dogs. However, considering that the model for CIFAR-10 is trained unconditionally without class labels, these samples still achieve a reasonable level of resemblance to training images. <br>
 
 ## Performance
-For training, I used CUDA on an RTX A4000 GPU. <br>
+For training, I used CUDA on an RTX A4000 GPU along with Automatic Mixed Precision (AMP). <br>
 The CIFAR-10 model takes 11 seconds to run 100 steps; the final 350k-step model took around 10 hours to train. <br>
 The CelebA model takes 55 seconds to run 100 steps; the final 229k-step model took around 35 hours to train. <br> 
 The CelebA model contains approximately 100 million parameters; storing EMA weights in FP16 results in a ~200 MB checkpoint. <br>
